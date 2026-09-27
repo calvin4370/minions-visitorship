@@ -13,3 +13,7 @@ def function2():
 
 def function3():
     return
+
+
+def function4():
+    return
