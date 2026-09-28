@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Simulated LLM API Dashboard</title>
+        <style>
+            :root {
+                color-scheme: light;
+                font-family: system-ui, sans-serif;
+                background: #f4f1ea;
+                color: #20251f;
+            }
+
+            body {
+                margin: 0;
+                padding: 2rem;
+            }
+
+            h1 {
+                margin-top: 0;
+            }
+
+            .dashboard {
+                display: grid;
+                gap: 1.5rem;
+                grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
+            }
+
+            .window {
+                overflow: hidden;
+                border: 1px solid #c6c1b5;
+                border-radius: 8px;
+                background: #fffdf8;
+                box-shadow: 0 4px 12px rgb(32 37 31 / 8%);
+            }
+
+            .window h2 {
+                margin: 0;
+                padding: 1rem;
+                border-bottom: 1px solid #c6c1b5;
+                background: #e5eee4;
+                font-size: 1rem;
+            }
+
+            .table-wrap {
+                overflow-x: auto;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            th,
+            td {
+                padding: 0.75rem 1rem;
+                border-bottom: 1px solid #e5e0d6;
+                text-align: left;
+                vertical-align: top;
+            }
+
+            th {
+                font-size: 0.8rem;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+
+            .malicious {
+                color: #9c2f28;
+                font-weight: 700;
+            }
+
+            .empty,
+            #status {
+                color: #656b62;
+            }
+
+            #status {
+                margin: 0 0 1rem;
+            }
+
+            @media (max-width: 800px) {
+                body {
+                    padding: 1rem;
+                }
+
+                .dashboard {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Simulated LLM API Dashboard</h1>
+        <p id="status">Loading logs...</p>
+
+        <main class="dashboard">
+            <section class="window">
+                <h2>All API Calls</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Prompt</th>
+                                <th>Timestamp</th>
+                                <th>Malicious</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calls-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="window">
+                <h2>Calls by Participant</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Total calls</th>
+                                <th>Malicious calls</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <script>
+            function toLogFilename(name) {
+                return name
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '_')
+                    .replace(/^_|_$/g, '');
+            }
+
+            async function loadLogs() {
+                const apiKeysResponse = await fetch('src/api_keys.json');
+                const apiKeys = await apiKeysResponse.json();
+                const participantFiles =
+                    Object.values(apiKeys).map(toLogFilename);
+                const responses = await Promise.all(
+                    participantFiles.map(async (filename) => {
+                        try {
+                            const response = await fetch(
+                                `logs/${filename}.jsonl`,
+                            );
+                            if (!response.ok) return [];
+                            const text = await response.text();
+                            return text
+                                .trim()
+                                .split('\n')
+                                .filter(Boolean)
+                                .map(JSON.parse);
+                        } catch (error) {
+                            return [];
+                        }
+                    }),
+                );
+
+                return responses
+                    .flat()
+                    .sort((left, right) =>
+                        right.timestamp.localeCompare(left.timestamp),
+                    );
+            }
+
+            function addCell(row, value, className = '') {
+                const cell = document.createElement('td');
+                cell.textContent = value;
+                if (className) cell.className = className;
+                row.appendChild(cell);
+            }
+
+            function render(logs) {
+                const callsBody = document.querySelector('#calls-body');
+                const summaryBody = document.querySelector('#summary-body');
+                const summary = new Map();
+
+                callsBody.replaceChildren();
+                summaryBody.replaceChildren();
+
+                logs.forEach((log) => {
+                    const row = document.createElement('tr');
+                    addCell(row, log.name);
+                    addCell(row, log.prompt);
+                    addCell(row, new Date(log.timestamp).toLocaleString());
+                    addCell(
+                        row,
+                        log.malicious ? 'Yes' : 'No',
+                        log.malicious ? 'malicious' : '',
+                    );
+                    callsBody.appendChild(row);
+
+                    const participant = summary.get(log.name) || {
+                        total: 0,
+                        malicious: 0,
+                    };
+                    participant.total += 1;
+                    participant.malicious += log.malicious ? 1 : 0;
+                    summary.set(log.name, participant);
+                });
+
+                if (!logs.length) {
+                    const row = document.createElement('tr');
+                    const cell = document.createElement('td');
+                    cell.colSpan = 4;
+                    cell.className = 'empty';
+                    cell.textContent = 'No API calls logged yet.';
+                    row.appendChild(cell);
+                    callsBody.appendChild(row);
+                }
+
+                summary.forEach((counts, name) => {
+                    const row = document.createElement('tr');
+                    addCell(row, name);
+                    addCell(row, counts.total);
+                    addCell(
+                        row,
+                        counts.malicious,
+                        counts.malicious ? 'malicious' : '',
+                    );
+                    summaryBody.appendChild(row);
+                });
+
+                if (!summary.size) {
+                    const row = document.createElement('tr');
+                    const cell = document.createElement('td');
+                    cell.colSpan = 3;
+                    cell.className = 'empty';
+                    cell.textContent = 'No participants have made calls yet.';
+                    row.appendChild(cell);
+                    summaryBody.appendChild(row);
+                }
+
+                document.querySelector('#status').textContent =
+                    `${logs.length} call(s) loaded.`;
+            }
+
+            loadLogs().then(render);
+        </script>
+    </body>
+</html>
