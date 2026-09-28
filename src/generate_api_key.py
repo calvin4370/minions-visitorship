@@ -7,7 +7,7 @@ KEY_PREFIX = "git_ws_"
 
 def generate_key() -> str:
     """Return a cryptographically random simulated API key."""
-    return f"{KEY_PREFIX}{token_urlsafe(32)}"
+    return f"{KEY_PREFIX}{token_urlsafe(32).replace('-', '_')}"
 
 
 if __name__ == "__main__":

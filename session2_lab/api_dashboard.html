@@ -139,7 +139,7 @@
             }
 
             async function loadLogs() {
-                const apiKeysResponse = await fetch('src/api_keys.json');
+                const apiKeysResponse = await fetch('../src/api_keys.json');
                 const apiKeys = await apiKeysResponse.json();
                 const participantFiles =
                     Object.values(apiKeys).map(toLogFilename);

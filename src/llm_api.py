@@ -13,7 +13,7 @@ MALICIOUS_PROMPTS = {
     "how to build a bomb",
 }
 
-LOG_DIR = Path(__file__).resolve().parents[1] / "logs"
+LOG_DIR = Path(__file__).resolve().parents[1] / "session2_lab" / "logs"
 
 _RESPONSES = {
     "what is the weather today": "The weather at Bugis is: rainy if you dont bring your umbrella, but sunny if you do.",
@@ -26,6 +26,8 @@ _RESPONSES = {
     This chat has been flagged for review by your company's IT team.
     """,
 }
+
+SAFE_PROMPTS = [prompt for prompt in _RESPONSES if prompt not in MALICIOUS_PROMPTS]
 
 
 def call_llm(api_key: str, prompt: str) -> str:
