@@ -369,7 +369,20 @@ To illustrate how your personal API keys may be misused:
     - Git will report a conflict in `api_testing.py`. Edit the file so that it contains your own key, then remove all conflict markers.
     - Run `git add api_testing.py`, then `git rebase --continue`.
     - Run `git push` after the rebase finishes.
-- Everyone: run `git log --oneline -- api_testing.py` to see the four participant commits in a linear history. Run `git log -p -- api_testing.py` to see that the keys remain in earlier commits even after the latest file is cleaned up.
+- Everyone: run `git log --oneline -- api_testing.py` to see the four participant commits in a linear history. In this command:
+  - `git log` shows the commit history.
+  - `--oneline` displays each commit on one compact line.
+  - `--` marks the end of Git options. Everything after it is treated as a file or folder path, not as another option or commit name.
+  - `api_testing.py` limits the history to commits that changed this file.
+- Run `git log -p -- api_testing.py` to see that the keys remain in earlier commits even after the latest file is cleaned up. Here, `-p` shows the line-by-line changes introduced by each commit:
+
+  ```text
+  git log    -p    --    api_testing.py
+  command  option  separator  file path
+             `--` separates options from the file path
+  ```
+
+  The `--` is important because it tells Git clearly that `api_testing.py` is a path. Without it, Git may try to interpret a name as a commit, branch, or other revision before treating it as a file.
 - In the left pane, right-click `session2_lab/api_dashboard.html` and click `Show Preview`
 
 > ### Learning Points: Why API Keys Must Be Secured
