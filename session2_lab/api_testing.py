@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.llm_api import call_llm
 
 # EDIT HERE ===================================================
-API_KEY = ""
+API_KEY = "git_ws_Zkwo2xkMItY2fJOlyVj6W0tGSn2l7wdavAhRtaDcL74"
 
 # =============================================================
 
