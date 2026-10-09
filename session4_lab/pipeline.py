@@ -1,0 +1,25 @@
+import time
+from config import YEAR
+
+
+print("----- Start of pipeline -----")
+time.sleep(1.5)
+print("Loaded {YEAR} data")
+time.sleep(1.5)
+print("Cleaned data")
+time.sleep(1.5)
+print("Transformed data")
+time.sleep(1.5)
+print("Trained model")
+time.sleep(1.5)
+print("Ordered bubble tea from {BUBBLE_TEA}")
+time.sleep(1.5)
+print("Tuned hyperparameters")
+time.sleep(1.5)
+print("Evaluated model")
+time.sleep(1.5)
+print("Generating plots")
+time.sleep(1.5)
+print("Saved outputs to {YEAR}_outputs.xlsx")
+time.sleep(1.5)
+print("----- End of pipeline -----")
